@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistiques des entrées - Match</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f1f5f9;
+      color: #111827;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    #total {
+      font-size: 2em;
+      text-align: center;
+      margin: 20px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Entrées - Match d'aujourd'hui</h1>
+  <div id="total">Chargement...</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Heure</th>
+        <th>Prénom</th>
+        <th>Nom</th>
+        <th>Place</th>
+      </tr>
+    </thead>
+    <tbody id="liste-entrees">
+    </tbody>
+  </table>
+
+  <script>
+    const API_URL = "https://supabase.com/dashboard/project/zobsdoqwneoewepgfsmf/rest/v1/entrees_vue?select=heure_entree,prenom,nom,billet_id&date_match=eq." + new Date().toISOString().split('T')[0];
+    const BILLETS_API = "https://supabase.com/dashboard/project/zobsdoqwneoewepgfsmf/rest/v1/billets_saison?select=id,place";
+    const API_HEADERS = {
+      "apikey": "TON_SUPABASE_ANON_KEY",
+      "Authorization": "Bearer TON_SUPABASE_ANON_KEY"
+    };
+
+    async function chargerEntrees() {
+      try {
+        const [entreesRes, billetsRes] = await Promise.all([
+          fetch(API_URL, { headers: API_HEADERS }),
+          fetch(BILLETS_API, { headers: API_HEADERS })
+        ]);
+        const entrees = await entreesRes.json();
+        const billets = await billetsRes.json();
+        const billetMap = Object.fromEntries(billets.map(b => [b.id, b.place]));
+
+        document.getElementById("total").textContent = `${entrees.length} entrée(s)`;
+
+        const tbody = document.getElementById("liste-entrees");
+        tbody.innerHTML = "";
+        entrees.sort((a, b) => new Date(a.heure_entree) - new Date(b.heure_entree));
+        entrees.forEach(e => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${new Date(e.heure_entree).toLocaleTimeString()}</td>
+            <td>${e.prenom}</td>
+            <td>${e.nom}</td>
+            <td>${billetMap[e.billet_id] || "-"}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        document.getElementById("total").textContent = "Erreur de chargement...";
+        console.error(err);
+      }
+    }
+
+    chargerEntrees();
+    setInterval(chargerEntrees, 10000); // refresh toutes les 10 sec
+  </script>
+</body>
+</html>
