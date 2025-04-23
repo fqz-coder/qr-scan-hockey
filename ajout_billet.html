@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ajouter une autorisation de billet</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f9fafb;
+      padding: 20px;
+      max-width: 500px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+    }
+    label, input, select, button {
+      display: block;
+      width: 100%;
+      margin-bottom: 15px;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+    }
+    #message {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ajouter une date autorisée</h1>
+  <label for="billet">ID du billet</label>
+  <input type="text" id="billet" placeholder="UUID du billet" required />
+
+  <label for="date">Date du match</label>
+  <input type="date" id="date" required />
+
+  <button onclick="ajouterAutorisation()">Ajouter</button>
+
+  <div id="message"></div>
+
+  <script>
+    const API_URL = "https://zobsdoqwneoewepgfsmf.supabase.co/rest/v1/rpc/ajouter_billet_autorise";
+    const API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvYnNkb3F3bmVvZXdlcGdmc21mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzNTQ3MzIsImV4cCI6MjA2MDkzMDczMn0.V2GZHOskaRbd8obwrHhHWzl1RJuuOhcdxc5sfT50njk"; // Remplace par ta clé anon
+
+    async function ajouterAutorisation() {
+      const billetId = document.getElementById("billet").value;
+      const date = document.getElementById("date").value;
+      const msg = document.getElementById("message");
+
+      if (!billetId || !date) {
+        msg.textContent = "Merci de remplir les deux champs.";
+        msg.style.color = "#dc2626";
+        return;
+      }
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "apikey": eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvYnNkb3F3bmVvZXdlcGdmc21mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzNTQ3MzIsImV4cCI6MjA2MDkzMDczMn0.V2GZHOskaRbd8obwrHhHWzl1RJuuOhcdxc5sfT50njk,
+            "Authorization": `Bearer ${eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvYnNkb3F3bmVvZXdlcGdmc21mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzNTQ3MzIsImV4cCI6MjA2MDkzMDczMn0.V2GZHOskaRbd8obwrHhHWzl1RJuuOhcdxc5sfT50njk}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ bid: billetId, d: date })
+        });
+
+        if (res.ok) {
+          msg.textContent = `Date autorisée ajoutée pour le billet.`;
+          msg.style.color = "#16a34a";
+        } else {
+          const err = await res.json();
+          msg.textContent = `Erreur : ${err.message || res.status}`;
+          msg.style.color = "#dc2626";
+        }
+      } catch (error) {
+        msg.textContent = `Erreur réseau : ${error.message}`;
+        msg.style.color = "#dc2626";
+      }
+    }
+  </script>
+</body>
+</html>
