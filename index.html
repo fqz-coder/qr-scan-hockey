@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan de billet - Hockey</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #0d1117;
+      color: #f0f6fc;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 20px 0;
+    }
+    #result {
+      font-size: 1.2em;
+      margin-top: 15px;
+      padding: 10px 15px;
+      border-radius: 8px;
+    }
+    .success {
+      background-color: #22c55e;
+      color: white;
+    }
+    .error {
+      background-color: #ef4444;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>Validation des billets</h1>
+  <p>Scannez un QR code pour enregistrer l'entrée</p>
+  <div id="reader"></div>
+  <div id="result"></div>
+
+  <script>
+    const API_URL = "https://qr-validator.onrender.com/scan"; // Remplace par ton URL
+    const dateMatch = new Date().toISOString().split('T')[0]; // Aujourd'hui
+
+    function setResult(message, status) {
+      const resultEl = document.getElementById("result");
+      resultEl.textContent = message;
+      resultEl.className = status === 'ok' ? 'success' : 'error';
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+      html5QrcodeScanner.clear();
+      setResult("Envoi...", "");
+      fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          billet_id: decodedText,
+          date_match: dateMatch
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        setResult(data.message, data.status);
+        setTimeout(() => html5QrcodeScanner.render(onScanSuccess), 3000);
+      })
+      .catch(err => {
+        setResult("Erreur de réseau", "error");
+        setTimeout(() => html5QrcodeScanner.render(onScanSuccess), 3000);
+      });
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader",
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      false
+    );
+    html5QrcodeScanner.render(onScanSuccess);
+  </script>
+</body>
+</html>
