@@ -38,6 +38,11 @@
       background-color: #ef4444;
       color: white;
     }
+    #info {
+      margin-top: 10px;
+      font-size: 1em;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -45,15 +50,18 @@
   <p>Scannez un QR code pour enregistrer l'entrée</p>
   <div id="reader"></div>
   <div id="result"></div>
+  <div id="info"></div>
 
   <script>
     const API_URL = "https://qr-validator.onrender.com/scan"; // Remplace par ton URL
     const dateMatch = new Date().toISOString().split('T')[0]; // Aujourd'hui
 
-    function setResult(message, status) {
+    function setResult(message, status, prenom = '', nom = '') {
       const resultEl = document.getElementById("result");
+      const infoEl = document.getElementById("info");
       resultEl.textContent = message;
       resultEl.className = status === 'ok' ? 'success' : 'error';
+      infoEl.textContent = prenom && nom ? `${prenom} ${nom}` : '';
     }
 
     function onScanSuccess(decodedText, decodedResult) {
@@ -71,7 +79,7 @@
       })
       .then(res => res.json())
       .then(data => {
-        setResult(data.message, data.status);
+        setResult(data.message, data.status, data.prenom, data.nom);
         setTimeout(() => html5QrcodeScanner.render(onScanSuccess), 3000);
       })
       .catch(err => {
