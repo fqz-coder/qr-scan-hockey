@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Statistiques des entrées - Match</title>
   <style>
     body {
@@ -32,6 +32,12 @@
     th {
       background-color: #e2e8f0;
     }
+    #log {
+      margin-top: 30px;
+      font-size: 0.9em;
+      color: #6b7280;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -46,51 +52,53 @@
         <th>Place</th>
       </tr>
     </thead>
-    <tbody id="liste-entrees">
-    </tbody>
+    <tbody id="liste-entrees"></tbody>
   </table>
+  <div id="log">Chargement en cours...</div>
 
   <script>
-    const API_URL = "https://supabase.com/dashboard/project/zobsdoqwneoewepgfsmf/rest/v1/entrees_vue?select=heure_entree,prenom,nom,billet_id&date_match=eq." + new Date().toISOString().split('T')[0];
-    const BILLETS_API = "https://supabase.com/dashboard/project/zobsdoqwneoewepgfsmf/rest/v1/billets_saison?select=id,place";
+    const dateDuJour = new Date().toISOString().split("T")[0];
+    const API_URL = `https://zobsdoqwneoewepgfsmf.supabase.co/rest/v1/entrees_vue?select=heure_entree,prenom,nom,place&date_match=eq.${dateDuJour}`;
     const API_HEADERS = {
-      "apikey": "TON_SUPABASE_ANON_KEY",
-      "Authorization": "Bearer TON_SUPABASE_ANON_KEY"
+      "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvYnNkb3F3bmVvZXdlcGdmc21mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzNTQ3MzIsImV4cCI6MjA2MDkzMDczMn0.V2GZHOskaRbd8obwrHhHWzl1RJuuOhcdxc5sfT50njk",
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvYnNkb3F3bmVvZXdlcGdmc21mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUzNTQ3MzIsImV4cCI6MjA2MDkzMDczMn0.V2GZHOskaRbd8obwrHhHWzl1RJuuOhcdxc5sfT50njk"
     };
+
+    let totalRequetes = 0;
 
     async function chargerEntrees() {
       try {
-        const [entreesRes, billetsRes] = await Promise.all([
-          fetch(API_URL, { headers: API_HEADERS }),
-          fetch(BILLETS_API, { headers: API_HEADERS })
-        ]);
-        const entrees = await entreesRes.json();
-        const billets = await billetsRes.json();
-        const billetMap = Object.fromEntries(billets.map(b => [b.id, b.place]));
+        const res = await fetch(API_URL, { headers: API_HEADERS });
+        const data = await res.json();
+        totalRequetes++;
 
-        document.getElementById("total").textContent = `${entrees.length} entrée(s)`;
+        document.getElementById("total").textContent = `${data.length} entrée(s)`;
 
         const tbody = document.getElementById("liste-entrees");
         tbody.innerHTML = "";
-        entrees.sort((a, b) => new Date(a.heure_entree) - new Date(b.heure_entree));
-        entrees.forEach(e => {
+        data.sort((a, b) => new Date(a.heure_entree) - new Date(b.heure_entree));
+        data.forEach(e => {
           const row = document.createElement("tr");
           row.innerHTML = `
             <td>${new Date(e.heure_entree).toLocaleTimeString()}</td>
             <td>${e.prenom}</td>
             <td>${e.nom}</td>
-            <td>${billetMap[e.billet_id] || "-"}</td>
+            <td>${e.place}</td>
           `;
           tbody.appendChild(row);
         });
+
+        document.getElementById("log").textContent = `✅ Mise à jour : ${new Date().toLocaleTimeString()} | Requêtes envoyées : ${totalRequetes}`;
+
       } catch (err) {
+        document.getElementById("log").textContent = `❌ Erreur API : ${err.message}`;
         document.getElementById("total").textContent = "Erreur de chargement...";
-        console.error(err);
+        console.error("Erreur API:", err);
       }
     }
 
     chargerEntrees();
-    setInterval(chargerEntrees, 10000); // refresh toutes les 10 sec
+    setInterval(chargerEntrees, 10000); // actualisation toutes les 10 sec
   </script>
 </body>
 </html>
